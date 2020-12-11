@@ -6,18 +6,18 @@ import torchvision.models as models
 import numpy as np
 from sklearn.metrics import f1_score
 
-
+    
 def evaluate(predict_labels, gt_labels):
     return f1_score(predict_labels, gt_labels, average='macro')
-
+    
 
 def select_model(num_input, num_classes):
     img_features = models.resnet18(pretrained=True)
     img_features.fc = nn.Linear(512, num_classes)
     meta_features = nn.Linear(num_input, num_classes)
-
+    
     classifier = nn.Linear(2*num_classes, num_classes)
-
+    
     return (img_features, meta_features, classifier)
 
 
@@ -39,10 +39,10 @@ class Baseline():
 
         self.train_losses = []
         self.val_losses = []
-
+        
         self.train_f1 = []
         self.val_f1 = []
-
+        
         self.best_f1 = 0
 
 
@@ -52,7 +52,7 @@ class Baseline():
         self.meta_features.train()
         self.classifier.train()
 
-        # Set Optimizer and Scheduler
+        # Set Optimizer and Scheduler       
         optimizer = torch.optim.Adam(
             [{'params': self.img_features.parameters()},
              {'params': self.meta_features.parameters(), 'lr':0.01},
@@ -68,7 +68,7 @@ class Baseline():
                 img_output = self.img_features(X)
                 meta_output = self.meta_features(M)
                 output = self.classifier(torch.cat((img_output, meta_output), 1))
-
+                
                 loss = self.loss_function(output, y)
 
                 optimizer.zero_grad()
@@ -78,7 +78,7 @@ class Baseline():
                 if (epoch % self.epoch_print == 0) and ((i+1) % self.print_freq == 0):
                     train_f1 = evaluate(torch.argmax(output, 1).tolist(), y.tolist())
                     val_f1, val_loss = self.val(val_data)
-
+                    
                     if self.best_f1 < val_f1:
                         torch.save(self.img_features.state_dict(), self.save + str(epoch) + '_' + str(i) + '_img.pt')
                         torch.save(self.meta_features.state_dict(), self.save + str(epoch) + '_' + str(i) + '_meta.pt')
@@ -88,7 +88,7 @@ class Baseline():
 
                     self.train_losses.append(loss.item())
                     self.val_losses.append(val_loss)
-
+                    
                     self.train_f1.append(train_f1)
                     self.val_f1.append(val_f1)
 
@@ -119,8 +119,8 @@ class Baseline():
 
                 loss = self.loss_function(output, y)
                 losses.append(loss.item())
-
+                
                 p_labels += torch.argmax(output, 1).tolist()
                 g_labels += y.tolist()
-
+                
         return (evaluate(p_labels, g_labels), sum(losses)/len(losses))

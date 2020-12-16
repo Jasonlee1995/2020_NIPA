@@ -74,4 +74,3 @@ Round 2
 └── README.md
 ```
 - Data cannot be uploaded cause of security issue
-- .ipynb files are not run cause of scp is forbidden for security issue
